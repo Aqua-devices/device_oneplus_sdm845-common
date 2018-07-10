@@ -50,8 +50,7 @@ static T get(const std::string& path, const T& def) {
     return file.fail() ? def : result;
 }
 
-static int rgbToBrightness(const LightState& state)
-{
+static int rgbToBrightness(const LightState& state) {
     int color = state.color & 0x00ffffff;
     return ((77 * ((color >> 16) & 0x00ff))
             + (150 * ((color >> 8) & 0x00ff))
@@ -66,7 +65,7 @@ Light::Light() {
 }
 
 void Light::handleBacklight(const LightState& state) {
-    int maxBrightness = get<int>("/sys/class/backlight/panel0-backlight/max_brightness", -1);
+    int maxBrightness = get("/sys/class/backlight/panel0-backlight/max_brightness", -1);
     if (maxBrightness < 0) {
         maxBrightness = 255;
     }
@@ -74,7 +73,7 @@ void Light::handleBacklight(const LightState& state) {
     int brightness = sentBrightness * maxBrightness / 255;
     LOG(DEBUG) << "Writing backlight brightness " << brightness
                << " (orig " << sentBrightness << ")";
-    set<int>("/sys/class/backlight/panel0-backlight/brightness", brightness);
+    set("/sys/class/backlight/panel0-backlight/brightness", brightness);
 }
 
 void Light::handleRgb(const LightState& state, size_t index) {
@@ -116,7 +115,7 @@ void Light::handleRgb(const LightState& state, size_t index) {
 
     // Disable all blinking before starting
     for (const auto& entry : colorValues) {
-        set<int>(makeLedPath(entry.first, "blink"), 0);
+        set(makeLedPath(entry.first, "blink"), 0);
     }
 
     if (onMs > 0 && offMs > 0) {
@@ -130,22 +129,22 @@ void Light::handleRgb(const LightState& state, size_t index) {
         }
 
         for (const auto& entry : colorValues) {
-            set<int>(makeLedPath(entry.first, "start_idx"), 0);
-            set<std::string>(makeLedPath(entry.first, "duty_pcts"), getScaledDutyPercent(entry.second));
-            set<int>(makeLedPath(entry.first, "pause_lo"), offMs);
+            set(makeLedPath(entry.first, "start_idx"), 0);
+            set(makeLedPath(entry.first, "duty_pcts"), getScaledDutyPercent(entry.second));
+            set(makeLedPath(entry.first, "pause_lo"), offMs);
             // The led driver is configured to ramp up then ramp
             // down the lut. This effectively doubles the ramp duration.
-            set<int>(makeLedPath(entry.first, "pause_hi"), pauseHi);
-            set<int>(makeLedPath(entry.first, "ramp_step_ms"), stepDuration);
+            set(makeLedPath(entry.first, "pause_hi"), pauseHi);
+            set(makeLedPath(entry.first, "ramp_step_ms"), stepDuration);
         }
 
         // Start blinking
         for (const auto& entry : colorValues) {
-            set<int>(makeLedPath(entry.first, "blink"), entry.second);
+            set(makeLedPath(entry.first, "blink"), entry.second);
         }
     } else {
         for (const auto& entry : colorValues) {
-            set<int>(makeLedPath(entry.first, "brightness"), entry.second);
+            set(makeLedPath(entry.first, "brightness"), entry.second);
         }
     }
 
