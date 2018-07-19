@@ -24,6 +24,9 @@ lib64/lib-imsvtutils.so
 lib64/librcc.so
 lib64/vendor.qti.imsrtpservice@1.0.so
 
+# hwcomposer override
+lib64/hw/hwcomposer.qcom.so
+
 # IOP
 lib64/vendor.qti.hardware.iop@2.0.so
 lib/vendor.qti.hardware.iop@2.0.so
