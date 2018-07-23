@@ -58,7 +58,7 @@ PRODUCT_PACKAGES_DEBUG += \
 
 # Camera
 PRODUCT_PACKAGES += \
-    Snap
+    GoogleCamera
 
 # Common init scripts
 PRODUCT_PACKAGES += \
