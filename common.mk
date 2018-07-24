@@ -56,10 +56,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES_DEBUG += \
     bootctl
 
-# Camera
-PRODUCT_PACKAGES += \
-    GoogleCamera
-
 # Common init scripts
 PRODUCT_PACKAGES += \
     init.qcom.rc \
@@ -125,6 +121,17 @@ PRODUCT_PACKAGES += \
 # Power
 PRODUCT_PACKAGES += \
     power.qcom
+
+# Prebuilt
+PRODUCT_PACKAGES += \
+    OnePlusCamera \
+    OnePlusGallery \
+    OnePlusCameraService     
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/prebuilt/addon.d/oneplus-camera.sh:system/addon.d/oneplus-camera.sh  \
+    $(LOCAL_PATH)/prebuilt/etc/permissions/privapp-permissions-oem.xml:system/etc/permissions/privapp-permissions-oem.xml \
+    $(LOCAL_PATH)/prebuilt/lib/libopcameralib-em.so:system/lib/libopcameralib-em.so
 
 # QTI
 PRODUCT_COPY_FILES += \
