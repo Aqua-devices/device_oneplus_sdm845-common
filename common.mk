@@ -77,10 +77,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/privapp-permissions-hotword.xml:system/etc/permissions/privapp-permissions-hotword.xml
 
-# IMS
-PRODUCT_PACKAGES += \
-    android.hidl.base@1.0
-
 # Telephony
 PRODUCT_PACKAGES += \
     ims-ext-common \
@@ -92,6 +88,12 @@ PRODUCT_BOOT_JARS += \
 # TextClassifier smart selection model files
 PRODUCT_PACKAGES += \
     textclassifier.smartselection.bundle1
+
+# HIDL
+PRODUCT_PACKAGES += \
+    android.hidl.manager@1.0-java \
+    android.hidl.base@1.0 \
+    android.hidl.manager@1.0
 
 # Input
 PRODUCT_COPY_FILES += \
