@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2018 The LineageOS Project
+# Copyright (C) 2018 The AquariOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ $(call inherit-product, vendor/oneplus/sdm845-common/sdm845-common-vendor.mk)
 
 # Overlays
 DEVICE_PACKAGE_OVERLAYS += \
-    $(LOCAL_PATH)/overlay \
-    $(LOCAL_PATH)/overlay-lineage
+    $(LOCAL_PATH)/overlay
 
 # Properties
 -include $(LOCAL_PATH)/system_prop.mk

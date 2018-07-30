@@ -1,5 +1,5 @@
 
-# Copyright (C) 2018 The LineageOS Project
+# Copyright (C) 2018 The AquariOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ TARGET_USES_HWC2 := true
 
 # Lineage Hardware
 BOARD_HARDWARE_CLASS += \
-    $(COMMON_PATH)/lineagehw
+    $(COMMON_PATH)/aquarioshw
 
 # Partitions
 BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864

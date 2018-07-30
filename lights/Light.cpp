@@ -2,7 +2,7 @@
  * Copyright (C) 2014, 2017-2018 The  Linux Foundation. All rights reserved.
  * Not a contribution
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (C) 2018 The LineageOS Project
+ * Copyright (C) 2018 The AquariOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
