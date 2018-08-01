@@ -140,6 +140,12 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/google.xml:system/etc/sysconfig/google.xml \
     $(LOCAL_PATH)/configs/qti_whitelist.xml:system/etc/sysconfig/qti_whitelist.xml
 
+# Spectrum
+PRODUCT_PACKAGES += \
+    init.spectrum.rc \
+    init.special_power.sh \
+    init.spectrum.sh
+
 # Update engine
 PRODUCT_PACKAGES += \
     brillo_update_payload \
