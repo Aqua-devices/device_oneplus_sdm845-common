@@ -69,6 +69,10 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libvulkan
 
+# Doze mode
+PRODUCT_PACKAGES += \
+    CustomDoze
+
 # Gestures
 PRODUCT_PACKAGES += \
     DeviceParts
