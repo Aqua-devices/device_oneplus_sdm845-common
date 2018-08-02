@@ -90,6 +90,7 @@ ifeq ($(HOST_OS),linux)
   endif
 endif
 WITH_DEXPREOPT_BOOT_IMG_AND_SYSTEM_SERVER_ONLY ?= true
+DONT_DEXPREOPT_PREBUILTS := true
 
 # Display
 TARGET_USES_HWC2 := true
