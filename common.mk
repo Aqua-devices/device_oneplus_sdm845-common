@@ -135,8 +135,9 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/prebuilt/etc/permissions/privapp-permissions-oem.xml:system/etc/permissions/privapp-permissions-oem.xml \
     $(LOCAL_PATH)/prebuilt/lib/libopcameralib-em.so:system/lib/libopcameralib-em.so
 
-# QTI
+# Sysconfig
 PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/google.xml:system/etc/sysconfig/google.xml \
     $(LOCAL_PATH)/configs/qti_whitelist.xml:system/etc/sysconfig/qti_whitelist.xml
 
 # Update engine
