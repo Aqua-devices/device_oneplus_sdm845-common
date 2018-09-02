@@ -103,6 +103,10 @@ PRODUCT_PACKAGES += \
     Tag \
     com.android.nfc_extras
 
+# Pocket mode
+PRODUCT_PACKAGES += \
+    OneplusPocketMode
+
 # Power
 PRODUCT_PACKAGES += \
     power.qcom
