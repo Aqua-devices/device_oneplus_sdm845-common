@@ -85,13 +85,7 @@ TARGET_USES_QTI_CAMERA2CLIENT := true
 # Charger
 BOARD_CHARGER_DISABLE_INIT_BLANK := true
 
-# Dex
-ifeq ($(HOST_OS),linux)
-  ifneq ($(TARGET_BUILD_VARIANT),eng)
-    WITH_DEXPREOPT ?= true
-  endif
-endif
-WITH_DEXPREOPT_BOOT_IMG_AND_SYSTEM_SERVER_ONLY ?= true
+WITH_DEXPREOPT := false
 
 # Enable DRM plugins 64 bit compilation
 TARGET_ENABLE_MEDIADRM_64 := true
