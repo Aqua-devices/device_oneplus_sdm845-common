@@ -69,6 +69,10 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libvulkan
 
+# Device
+PRODUCT_PACKAGES += \
+    DeviceParts
+
 # HotwordEnrollement app permissions
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/privapp-permissions-hotword.xml:system/etc/permissions/privapp-permissions-hotword.xml
