@@ -18,11 +18,14 @@
 PRODUCT_PROPERTY_OVERRIDES += \
     audio.offload.min.duration.secs=30 \
     persist.vendor.audio.hac.enable=false \
-    persist.vendor.audio_hal.dsp_bit_width_enforce_mode=24
+    persist.vendor.audio_hal.dsp_bit_width_enforce_mode=24 \
+    ro.config.media_vol_steps=25 \
+    ro.config.vc_call_vol_steps=7
 
 # Camera
 PRODUCT_PROPERTY_OVERRIDES += \
-    camera.disable_zsl_mode=true
+    camera.disable_zsl_mode=true \
+    vendor.camera.aux.packagelist=com.oneplus.camera
 
 # Display
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -70,6 +73,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.vendor.data.iwlan.enable=true \
     persist.vendor.data.mode=concurrent
+
+# Rescue Party
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.sys.disable_rescue=true
 
 # SSR
 PRODUCT_PROPERTY_OVERRIDES += \

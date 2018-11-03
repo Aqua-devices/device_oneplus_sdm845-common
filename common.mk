@@ -15,8 +15,6 @@
 # limitations under the License.
 #
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_o_mr1.mk)
-
 # Get non-open-source specific aspects
 $(call inherit-product, vendor/oneplus/sdm845-common/sdm845-common-vendor.mk)
 
@@ -60,10 +58,25 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES_DEBUG += \
     bootctl
 
+# Camera
+PRODUCT_PACKAGES_DEBUG += \
+    CameraPackage
+
 # Common init scripts
 PRODUCT_PACKAGES += \
+    init.performance_profiles.rc \
     init.qcom.rc \
-    init.recovery.qcom.rc
+    init.qcom.test.rc \
+    init.recovery.qcom.rc \
+    init.smurf.rc \
+    init.spectrum.rc \
+    init.smurf.post_boot.rc
+
+# Common kernel scripts
+PRODUCT_PACKAGES += \
+    init.smurf.post_boot.sh \
+    init.special_power.sh \
+    init.spectrum.sh
 
 # Display
 PRODUCT_PACKAGES += \
@@ -128,6 +141,13 @@ PRODUCT_COPY_FILES += \
 # QTI
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/qti_whitelist.xml:system/etc/sysconfig/qti_whitelist.xml
+
+# Telephony
+PRODUCT_PACKAGES += \
+    telephony-ext
+
+PRODUCT_BOOT_JARS += \
+    telephony-ext
 
 # tri-state-key
 PRODUCT_PACKAGES += \
