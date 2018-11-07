@@ -107,6 +107,10 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     OneplusPocketMode
 
+# tri-state-key
+PRODUCT_PACKAGES += \
+    tri-state-key_daemon
+
 # Power
 PRODUCT_PACKAGES += \
     power.qcom
