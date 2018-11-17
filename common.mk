@@ -44,8 +44,8 @@ PRODUCT_PACKAGES += \
     otapreopt_script
 
 # ANT+
-PRODUCT_PACKAGES += \
-    AntHalService
+#PRODUCT_PACKAGES += \
+#    AntHalService
 
 # Audio
 PRODUCT_PACKAGES += \
@@ -144,7 +144,7 @@ PRODUCT_COPY_FILES += \
 
 # Telephony
 PRODUCT_PACKAGES += \
-    telephony-ext
+    qti-telephony-common
 
 PRODUCT_BOOT_JARS += \
     telephony-ext
