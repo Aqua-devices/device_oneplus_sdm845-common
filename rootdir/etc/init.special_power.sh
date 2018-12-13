@@ -22,15 +22,18 @@ function writepid_sbg() {
 ################################################################################
 
 {
+sleep 25;
+
+write /sys/block/sda/queue/scheduler cfq;
+write /sys/block/sda/queue/read_ahead_kb 128;
+write /sys/block/sda/queue/iostats 0;
+write /sys/block/sda/queue/nr_requests 128;
+write /sys/block/sde/queue/scheduler cfq;
+write /sys/block/sde/queue/read_ahead_kb 128;
+write /sys/block/sde/queue/iostats 0;
+write /sys/block/sde/queue/nr_requests 128;
 
 sleep 10;
-
-    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor smurfutil_flex;
-    write /sys/devices/system/cpu/cpufreq/policy4/scaling_governor smurfutil_flex;
-    write /sys/devices/system/cpu0/cpufreq/scaling_governor smurfutil_flex;
-    write /sys/devices/system/cpu4/cpufreq/scaling_governor smurfutil_flex;
-
-sleep 20;
 
 QSEECOMD=`pidof qseecomd`
 THERMAL-ENGINE=`pidof thermal-engine`

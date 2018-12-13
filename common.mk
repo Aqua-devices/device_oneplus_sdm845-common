@@ -69,13 +69,16 @@ PRODUCT_PACKAGES += \
     init.qcom.test.rc \
     init.recovery.qcom.rc \
     init.smurf.rc \
-    init.spectrum.rc \
-    init.smurf.post_boot.rc
+    init.spectrum.rc
 
 # Common kernel scripts
 PRODUCT_PACKAGES += \
-    init.smurf.post_boot.sh \
+    init.profile0.sh \
+    init.profile1.sh \
+    init.profile2.sh \
+    init.profile3.sh \
     init.special_power.sh \
+    init.smurf.sh \
     init.spectrum.sh
 
 # Display
@@ -92,7 +95,6 @@ PRODUCT_COPY_FILES += \
 
 # IMS
 PRODUCT_PACKAGES += \
-    ims-ext-common \
     android.hidl.base@1.0
 
 # Input
@@ -172,3 +174,8 @@ PRODUCT_PACKAGES_DEBUG += \
 # WFD
 PRODUCT_BOOT_JARS += \
     WfdCommon
+
+# Custom op6 healthd
+PRODUCT_PACKAGES += android.hardware.health@2.0-service.oneplus6
+DEVICE_FRAMEWORK_MANIFEST_FILE += \
+    system/libhidl/vintfdata/manifest_healthd_exclude.xml

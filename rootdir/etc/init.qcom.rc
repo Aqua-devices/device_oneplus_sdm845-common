@@ -8,6 +8,7 @@ on init
     mount none /system/lib/modules/wlan.ko /vendor/lib/modules-aging/qca_cld3_wlan.ko bind
     mount none /system/lib/modules/wlan.ko /vendor/lib/modules/qca_cld3_wlan.ko bind
     mount none /system/etc/WCNSS_qcom_cfg.ini /vendor/etc/wifi/WCNSS_qcom_cfg.ini bind
+    mount none /dev/null /vendor/etc/init/android.hardware.health@2.0-service.rc bind
 
 on boot
     # default country code
@@ -130,9 +131,10 @@ on boot
     chown system system /sys/class/power_supply/usb/otg_switch
     chmod 0660 /sys/class/power_supply/usb/otg_switch
 
-    mkdir /persist/battery 0770 system system
-
     setprop vendor.camera.aux.packagelist com.oneplus.camera
+    setprop persist.vendor.dpm.feature 11
+
+    mkdir /persist/battery 0770 system system
 
 on charger
     write /sys/class/backlight/panel0-backlight/brightness 150
