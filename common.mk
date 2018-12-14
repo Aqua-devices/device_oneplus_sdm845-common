@@ -78,7 +78,6 @@ PRODUCT_PACKAGES += \
     init.profile2.sh \
     init.profile3.sh \
     init.special_power.sh \
-    init.smurf.sh \
     init.spectrum.sh
 
 # Display
