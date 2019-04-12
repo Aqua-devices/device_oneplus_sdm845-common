@@ -137,4 +137,7 @@
 
     <!-- Whether to enable OP5/T OP cam hack -->
     <bool name="config_hasOnePlusCamera">true</bool>
+
+    <!-- Dont Check Fingerprint -->
+    <bool name="config_checkVendorFingerprint">false</bool>
 </resources>
