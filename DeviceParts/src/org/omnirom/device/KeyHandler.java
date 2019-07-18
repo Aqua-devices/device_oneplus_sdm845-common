@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2016 The OmniROM Project
+* Copyright (C) 2016 The AquaROM Project
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@ package org.omnirom.device;
 
 import static android.provider.Settings.Global.ZEN_MODE_OFF;
 import static android.provider.Settings.Global.ZEN_MODE_IMPORTANT_INTERRUPTIONS;
-import static android.provider.Settings.Global.ZEN_MODE_ALARMS;
-import static android.provider.Settings.Global.ZEN_MODE_NO_INTERRUPTIONS;
 
 import android.app.ActivityManagerNative;
 import android.app.NotificationManager;
@@ -39,6 +37,7 @@ import android.media.AudioManager;
 import android.media.session.MediaSessionLegacyHelper;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -49,6 +48,8 @@ import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UEventObserver;
 import android.os.UserHandle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.provider.Settings.Global;
 import android.telecom.PhoneAccountHandle;
@@ -61,14 +62,18 @@ import android.view.HapticFeedbackConstants;
 import android.view.WindowManagerGlobal;
 
 import com.android.internal.os.DeviceKeyHandler;
+import com.android.internal.util.aquarios.PackageUtils;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.aquarios.AquaUtils;
+import org.omnirom.omnilib.utils.OmniVibe;
 import com.android.internal.statusbar.IStatusBarService;
+
+import vendor.oneplus.camera.CameraHIDL.V1_0.IOnePlusCameraProvider;
 
 public class KeyHandler implements DeviceKeyHandler {
 
     private static final String TAG = "KeyHandler";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private static final boolean DEBUG_SENSOR = true;
 
     protected static final int GESTURE_REQUEST = 1;
@@ -100,7 +105,12 @@ public class KeyHandler implements DeviceKeyHandler {
     private static final int POCKET_MIN_DELTA_MS = 5000;
     private static final int FP_GESTURE_LONG_PRESS = 305;
 
-    private static final int[] sSupportedGestures = new int[]{
+    private static final boolean sIsOnePlus6 = android.os.Build.MODEL.equals("ONEPLUS A6003");
+
+    public static final String CLIENT_PACKAGE_NAME = "com.oneplus.camera";
+    public static final String CLIENT_PACKAGE_PATH = "/data/vendor/omni/client_package_name";
+
+    private static final int[] sSupportedGestures6 = new int[]{
         GESTURE_II_SCANCODE,
         GESTURE_CIRCLE_SCANCODE,
         GESTURE_V_SCANCODE,
@@ -116,6 +126,23 @@ public class KeyHandler implements DeviceKeyHandler {
         KEY_SLIDER_CENTER,
         KEY_SLIDER_BOTTOM,
         FP_GESTURE_LONG_PRESS,
+    };
+
+    private static final int[] sSupportedGestures = new int[]{
+        GESTURE_II_SCANCODE,
+        GESTURE_CIRCLE_SCANCODE,
+        GESTURE_V_SCANCODE,
+        GESTURE_A_SCANCODE,
+        GESTURE_LEFT_V_SCANCODE,
+        GESTURE_RIGHT_V_SCANCODE,
+        GESTURE_DOWN_SWIPE_SCANCODE,
+        GESTURE_UP_SWIPE_SCANCODE,
+        GESTURE_LEFT_SWIPE_SCANCODE,
+        GESTURE_RIGHT_SWIPE_SCANCODE,
+        KEY_DOUBLE_TAP,
+        KEY_SLIDER_TOP,
+        KEY_SLIDER_CENTER,
+        KEY_SLIDER_BOTTOM
     };
 
     private static final int[] sProxiCheckedGestures = new int[]{
@@ -154,6 +181,12 @@ public class KeyHandler implements DeviceKeyHandler {
     private boolean mFPcheck;
     private boolean mDispOn;
     private boolean isFpgesture;
+    private ClientPackageNameObserver mClientObserver;
+    private IOnePlusCameraProvider mProvider;
+    private boolean isOPCameraAvail;
+    private boolean mRestoreUser;
+    private boolean mUseSliderTorch = false;
+    private boolean mTorchState = false;
 
     private SensorEventListener mProximitySensor = new SensorEventListener() {
         @Override
@@ -237,7 +270,7 @@ public class KeyHandler implements DeviceKeyHandler {
         }
     }
 
-    private BroadcastReceiver mScreenStateReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mSystemStateReceiver = new BroadcastReceiver() {
          @Override
          public void onReceive(Context context, Intent intent) {
              if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
@@ -246,6 +279,14 @@ public class KeyHandler implements DeviceKeyHandler {
              } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                  mDispOn = false;
                  onDisplayOff();
+             } else if (intent.getAction().equals(Intent.ACTION_USER_SWITCHED)) {
+                int userId = intent.getIntExtra(Intent.EXTRA_USER_HANDLE, UserHandle.USER_NULL);
+                if (userId == UserHandle.USER_SYSTEM && mRestoreUser) {
+                    if (DEBUG) Log.i(TAG, "ACTION_USER_SWITCHED to system");
+                    Startup.restoreAfterUserSwitch(context);
+                } else {
+                    mRestoreUser = true;
+                }
              }
          }
     };
@@ -262,11 +303,12 @@ public class KeyHandler implements DeviceKeyHandler {
         mNoMan = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-        mTiltSensor = getSensor(mSensorManager, "oneplus.sensor.pickup");
+        mTiltSensor = getSensor(mSensorManager, "oneplus.sensor.op_motion_detect");
         mPocketSensor = getSensor(mSensorManager, "oneplus.sensor.pocket");
-        IntentFilter screenStateFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-        screenStateFilter.addAction(Intent.ACTION_SCREEN_OFF);
-        mContext.registerReceiver(mScreenStateReceiver, screenStateFilter);
+        IntentFilter systemStateFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        systemStateFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        systemStateFilter.addAction(Intent.ACTION_USER_SWITCHED);
+        mContext.registerReceiver(mSystemStateReceiver, systemStateFilter);
         (new UEventObserver() {
             @Override
             public void onUEvent(UEventObserver.UEvent event) {
@@ -287,7 +329,13 @@ public class KeyHandler implements DeviceKeyHandler {
                 }
 
             }
-    }).startObserving("DEVPATH=/devices/platform/soc/soc:tri_state_key");
+        }).startObserving("DEVPATH=/devices/platform/soc/soc:tri_state_key");
+
+        isOPCameraAvail = PackageUtils.isAvailableApp("com.oneplus.camera", context);
+        if (isOPCameraAvail) {
+            mClientObserver = new ClientPackageNameObserver(CLIENT_PACKAGE_PATH);
+            mClientObserver.startWatching();
+        }
     }
 
     private class EventHandler extends Handler {
@@ -311,6 +359,7 @@ public class KeyHandler implements DeviceKeyHandler {
         if (mFPcheck && mDispOn && !TextUtils.isEmpty(value) && !value.equals(AppSelectListPreference.DISABLED_ENTRY)){
             isFpgesture = true;
             if (!launchSpecialActions(value) && !isCameraLaunchEvent(event)) {
+                    OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
                     Intent intent = createIntent(value);
                     if (DEBUG) Log.i(TAG, "intent = " + intent);
                     mContext.startActivity(intent);
@@ -321,7 +370,11 @@ public class KeyHandler implements DeviceKeyHandler {
 
     @Override
     public boolean canHandleKeyEvent(KeyEvent event) {
-        return ArrayUtils.contains(sSupportedGestures, event.getScanCode());
+        if (sIsOnePlus6) {
+            return ArrayUtils.contains(sSupportedGestures6, event.getScanCode());
+        } else {
+            return ArrayUtils.contains(sSupportedGestures, event.getScanCode());
+        }
     }
 
     @Override
@@ -371,6 +424,7 @@ public class KeyHandler implements DeviceKeyHandler {
         if (!TextUtils.isEmpty(value) && !value.equals(AppSelectListPreference.DISABLED_ENTRY)) {
             if (DEBUG) Log.i(TAG, "isActivityLaunchEvent " + event.getScanCode() + value);
             if (!launchSpecialActions(value)) {
+                OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
                 Intent intent = createIntent(value);
                 return intent;
             }
@@ -420,6 +474,10 @@ public class KeyHandler implements DeviceKeyHandler {
         if (mUseTiltCheck) {
             mSensorManager.unregisterListener(mTiltSensorListener, mTiltSensor);
         }
+        if ((mClientObserver == null) && (isOPCameraAvail)) {
+            mClientObserver = new ClientPackageNameObserver(CLIENT_PACKAGE_PATH);
+            mClientObserver.startWatching();
+        }
     }
 
     private void enableGoodix() {
@@ -439,6 +497,10 @@ public class KeyHandler implements DeviceKeyHandler {
         if (mUseTiltCheck) {
             mSensorManager.registerListener(mTiltSensorListener, mTiltSensor,
                     SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        if (mClientObserver != null) {
+            mClientObserver.stopWatching();
+            mClientObserver = null;
         }
     }
 
@@ -466,22 +528,33 @@ public class KeyHandler implements DeviceKeyHandler {
         if ( action == 0) {
             mNoMan.setZenMode(ZEN_MODE_OFF, null, TAG);
             mAudioManager.setRingerModeInternal(AudioManager.RINGER_MODE_NORMAL);
+            mTorchState = false;
         } else if (action == 1) {
             mNoMan.setZenMode(ZEN_MODE_OFF, null, TAG);
             mAudioManager.setRingerModeInternal(AudioManager.RINGER_MODE_VIBRATE);
+            mTorchState = false;
         } else if (action == 2) {
             mNoMan.setZenMode(ZEN_MODE_OFF, null, TAG);
             mAudioManager.setRingerModeInternal(AudioManager.RINGER_MODE_SILENT);
+            mTorchState = false;
         } else if (action == 3) {
             mNoMan.setZenMode(ZEN_MODE_IMPORTANT_INTERRUPTIONS, null, TAG);
             mAudioManager.setRingerModeInternal(AudioManager.RINGER_MODE_NORMAL);
+            mTorchState = false;
         } else if (action == 4) {
-            mNoMan.setZenMode(ZEN_MODE_ALARMS, null, TAG);
+            mNoMan.setZenMode(ZEN_MODE_OFF, null, TAG);
             mAudioManager.setRingerModeInternal(AudioManager.RINGER_MODE_NORMAL);
-        } else if (action == 5) {
-            mNoMan.setZenMode(ZEN_MODE_NO_INTERRUPTIONS, null, TAG);
-            mAudioManager.setRingerModeInternal(AudioManager.RINGER_MODE_NORMAL);
+            mUseSliderTorch = true;
+            mTorchState = true;
         }
+
+        if (((!mProxyIsNear && mUseProxiCheck) || !mUseProxiCheck) && mUseSliderTorch && action < 4) {
+            launchSpecialActions(AppSelectListPreference.TORCH_ENTRY);
+            mUseSliderTorch = false;
+        } else if (((!mProxyIsNear && mUseProxiCheck) || !mUseProxiCheck) && mUseSliderTorch) {
+            launchSpecialActions(AppSelectListPreference.TORCH_ENTRY);
+        }
+
     }
 
     private Intent createIntent(String value) {
@@ -500,47 +573,63 @@ public class KeyHandler implements DeviceKeyHandler {
             IStatusBarService service = getStatusBarService();
             if (service != null) {
                 try {
-                    service.toggleCameraFlash();
+                    if (mUseSliderTorch) {
+                        service.toggleCameraFlashState(mTorchState);
+                        return true;
+                    } else {
+                        service.toggleCameraFlash();
+                        OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
+                        return true;
+                    }
                 } catch (RemoteException e) {
-                    // do nothing.
-                }
-            }
-            return true;
+                // do nothing.
+               }
+           }
         } else if (value.equals(AppSelectListPreference.MUSIC_PLAY_ENTRY)) {
             mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             dispatchMediaKeyWithWakeLockToAudioService(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
             return true;
         } else if (value.equals(AppSelectListPreference.MUSIC_NEXT_ENTRY)) {
             if (isMusicActive()) {
                 mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
+                OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
                 dispatchMediaKeyWithWakeLockToAudioService(KeyEvent.KEYCODE_MEDIA_NEXT);
             }
             return true;
         } else if (value.equals(AppSelectListPreference.MUSIC_PREV_ENTRY)) {
             if (isMusicActive()) {
                 mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
+                OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
                 dispatchMediaKeyWithWakeLockToAudioService(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
             }
             return true;
         } else if (value.equals(AppSelectListPreference.VOLUME_UP_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             mAudioManager.adjustSuggestedStreamVolume(AudioManager.ADJUST_RAISE,AudioManager.USE_DEFAULT_STREAM_TYPE,AudioManager.FLAG_SHOW_UI);
             return true;
         } else if (value.equals(AppSelectListPreference.VOLUME_DOWN_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             mAudioManager.adjustSuggestedStreamVolume(AudioManager.ADJUST_LOWER,AudioManager.USE_DEFAULT_STREAM_TYPE,AudioManager.FLAG_SHOW_UI);
             return true;
         } else if (value.equals(AppSelectListPreference.BROWSE_SCROLL_DOWN_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             AquaUtils.sendKeycode(KeyEvent.KEYCODE_PAGE_DOWN);
             return true;
         } else if (value.equals(AppSelectListPreference.BROWSE_SCROLL_UP_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             AquaUtils.sendKeycode(KeyEvent.KEYCODE_PAGE_UP);
             return true;
         } else if (value.equals(AppSelectListPreference.NAVIGATE_BACK_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             AquaUtils.sendKeycode(KeyEvent.KEYCODE_BACK);
             return true;
         } else if (value.equals(AppSelectListPreference.NAVIGATE_HOME_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             AquaUtils.sendKeycode(KeyEvent.KEYCODE_HOME);
             return true;
         } else if (value.equals(AppSelectListPreference.NAVIGATE_RECENT_ENTRY)) {
+            OmniVibe.performHapticFeedbackLw(HapticFeedbackConstants.LONG_PRESS, false, mContext);
             AquaUtils.sendKeycode(KeyEvent.KEYCODE_APP_SWITCH);
             return true;
         }
@@ -635,5 +724,26 @@ public class KeyHandler implements DeviceKeyHandler {
     @Override
     public String getCustomProxiSensor() {
         return "oneplus.sensor.pocket";
+    }
+
+    private class ClientPackageNameObserver extends FileObserver {
+
+        public ClientPackageNameObserver(String file) {
+            super(CLIENT_PACKAGE_PATH, MODIFY);
+        }
+
+        @Override
+        public void onEvent(int event, String file) {
+            String pkgName = Utils.getFileValue(CLIENT_PACKAGE_PATH, "0");
+            if (event == FileObserver.MODIFY) {
+                try {
+                    Log.d(TAG, "client_package" + file + " and " + pkgName);
+                    mProvider = IOnePlusCameraProvider.getService();
+                    mProvider.setPackageName(pkgName);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "setPackageName error", e);
+                }
+            }
+        }
     }
 }

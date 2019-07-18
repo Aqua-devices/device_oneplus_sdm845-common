@@ -40,6 +40,8 @@ import android.util.Log;
 public class DeviceSettings extends PreferenceFragment implements
         Preference.OnPreferenceChangeListener {
 
+    public static final String KEY_VIBSTRENGTH = "vib_strength";
+
     private static final String KEY_SLIDER_MODE_TOP = "slider_mode_top";
     private static final String KEY_SLIDER_MODE_CENTER = "slider_mode_center";
     private static final String KEY_SLIDER_MODE_BOTTOM = "slider_mode_bottom";
@@ -58,6 +60,9 @@ public class DeviceSettings extends PreferenceFragment implements
 
     public static final String SLIDER_DEFAULT_VALUE = "2,1,0";
 
+    public static final String KEY_SETTINGS_PREFIX = "device_setting_";
+
+    private VibratorStrengthPreference mVibratorStrength;
     private ListPreference mSliderModeTop;
     private ListPreference mSliderModeCenter;
     private ListPreference mSliderModeBottom;
@@ -69,6 +74,11 @@ public class DeviceSettings extends PreferenceFragment implements
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.main, rootKey);
+
+        mVibratorStrength = (VibratorStrengthPreference) findPreference(KEY_VIBSTRENGTH);
+        if (mVibratorStrength != null) {
+            mVibratorStrength.setEnabled(VibratorStrengthPreference.isSupported());
+        }
 
         mSliderModeTop = (ListPreference) findPreference(KEY_SLIDER_MODE_TOP);
         mSliderModeTop.setOnPreferenceChangeListener(this);
@@ -94,12 +104,13 @@ public class DeviceSettings extends PreferenceFragment implements
         mHBMModeSwitch = (TwoStatePreference) findPreference(KEY_HBM_SWITCH);
         mHBMModeSwitch.setEnabled(HBMModeSwitch.isSupported());
         mHBMModeSwitch.setChecked(HBMModeSwitch.isCurrentlyEnabled(this.getContext()));
-        mHBMModeSwitch.setOnPreferenceChangeListener(new HBMModeSwitch());
+        mHBMModeSwitch.setOnPreferenceChangeListener(new HBMModeSwitch(getContext()));
 
         mOtgSwitch = (TwoStatePreference) findPreference(KEY_OTG_SWITCH);
         mOtgSwitch.setEnabled(UsbOtgSwitch.isSupported());
         mOtgSwitch.setChecked(UsbOtgSwitch.isCurrentlyEnabled(this.getContext()));
-        mOtgSwitch.setOnPreferenceChangeListener(new UsbOtgSwitch());
+        mOtgSwitch.setOnPreferenceChangeListener(new UsbOtgSwitch(getContext()));
+
     }
 
     @Override
