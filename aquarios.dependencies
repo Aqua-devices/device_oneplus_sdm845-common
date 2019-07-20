@@ -1,11 +1,21 @@
 [
   {
-    "repository": "kernel_oneplus_sdm845",
-    "target_path": "kernel/oneplus/sdm845"
+    "repository"  : "AOSiP-Devices/kernel_oneplus_sdm845",
+    "target_path" : "kernel/oneplus/sdm845",
+    "branch"      : "staging"
   },
   {
-    "repository": "proprietary_vendor_blobs_oneplus",
-    "target_path": "vendor/oneplus"
+    "repository"  : "device_oneplus_common",
+    "target_path" : "device/oneplus/common"
+  },
+  {
+    "repository"  : "AOSiP-Devices/vendor_oneplus_sdm845-common",
+    "target_path" : "vendor/oneplus/sdm845-common",
+     "branch"      : "pie"
+  },
+  {
+    "repository"  : "omnirom/android_packages_apps_OmniLib",
+    "target_path" : "packages/apps/OmniLib",
+    "branch"      : "android-9.0"
   }
 ]
-
